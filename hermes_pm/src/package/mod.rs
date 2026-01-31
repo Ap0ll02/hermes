@@ -32,7 +32,7 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
     // eprintln!("=== Searching for: '{}' ===", query);
     
     // Try with explicit config
-    let mut alpm = Alpm::new("/", "/var/lib/pacman")
+    let alpm = Alpm::new("/", "/var/lib/pacman")
         .map_err(|e| {
             // eprintln!("❌ ALPM init error: {}", e);
             format!("Failed to initialize ALPM: {}", e)
@@ -45,10 +45,10 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
     
     for repo_name in repos {
         match alpm.register_syncdb(repo_name, SigLevel::USE_DEFAULT) {
-            Ok(db) => {
+            Ok(_db) => {
                 // eprintln!("  ✓ Registered: {} ({} packages)", repo_name, db.pkgs().into_iter().count());
             }
-            Err(e) => {
+            Err(_e) => {
                 // eprintln!("  ❌ Failed to register {}: {}", repo_name, e);
             }
         }

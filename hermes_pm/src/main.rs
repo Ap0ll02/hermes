@@ -4,9 +4,9 @@ mod ui;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{prelude::*, Terminal};
+use ratatui::{Terminal, prelude::*};
 use std::io;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,13 +16,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    
+
     // Create app
     let mut app = ui::App::new();
-    
+
     // Run app
     let res = run_app(&mut terminal, &mut app);
-    
+
     // Restore terminal
     disable_raw_mode()?;
     execute!(
@@ -31,27 +31,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
-    
+
     if let Err(err) = res {
         println!("Error: {:?}", err);
     }
-    
+
     Ok(())
 }
 
-fn run_app<B: Backend>(
-    terminal: &mut Terminal<B>,
-    app: &mut ui::App,
-) -> io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Result<()> {
     loop {
         let draw_res = terminal.draw(|f| ui::draw(f, app));
         match draw_res {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 println!("Error: {e}");
                 panic!("Idk how to return properly");
             }
-        } 
+        }
         if let Event::Key(key) = event::read()? {
             match app.mode {
                 ui::InputMode::Search => {
@@ -74,23 +71,31 @@ fn run_app<B: Backend>(
                         KeyCode::Esc => {
                             app.mode = ui::InputMode::Normal;
                         }
+                        KeyCode::Enter => {
+                            app.mode = ui::InputMode::Normal;
+                        }
                         KeyCode::Down => app.next(),
                         KeyCode::Up => app.previous(),
                         _ => {}
                     }
                 }
-                ui::InputMode::Normal => {
-                    match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char('/') => {
-                            app.mode = ui::InputMode::Search;
-                            app.search_query.clear();
+                ui::InputMode::Normal => match key.code {
+                    KeyCode::Char('q') => {
+                        if app.show_help {
+                            app.show_help = false;
+                        } else {
+                            return Ok(());
                         }
-                        KeyCode::Down | KeyCode::Char('j') => app.next(),
-                        KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                        _ => {}
                     }
-                }
+                    KeyCode::Char('/') | KeyCode::Char('i') => {
+                        app.mode = ui::InputMode::Search;
+                        app.search_query.clear();
+                    }
+                    KeyCode::Char('h') | KeyCode::Char('?') => app.show_help = true,
+                    KeyCode::Down | KeyCode::Char('j') => app.next(),
+                    KeyCode::Up | KeyCode::Char('k') => app.previous(),
+                    _ => {}
+                },
             }
         }
     }
