@@ -1,3 +1,4 @@
+mod commands;
 mod package;
 mod ui;
 
@@ -50,6 +51,38 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
             }
         }
         if let Event::Key(key) = event::read()? {
+            // Handle confirmation dialog
+            if let Some(ref action) = app.confirm_msg {
+                match key.code {
+                    KeyCode::Char('y') | KeyCode::Char('Y') => {
+                        // Execute the action
+                        let result = match action {
+                            ui::ConfirmAction::Install(pkg) => commands::install_package(pkg),
+                            ui::ConfirmAction::Remove(pkg) => commands::remove_package(pkg),
+                        };
+
+                        app.status_msg = Some(match result {
+                            Ok(msg) => msg,
+                            Err(msg) => format!("Error: {}", msg),
+                        });
+
+                        app.confirm_msg = None;
+
+                        // Refresh search to update installed status
+                        if !app.search_query.is_empty() {
+                            if let Ok(results) = package::search_packages(&app.search_query) {
+                                app.packages = results;
+                            }
+                        }
+                    }
+                    KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                        app.confirm_msg = None;
+                        app.status_msg = Some("Action cancelled".to_string());
+                    }
+                    _ => {}
+                }
+                continue;
+            }
             match app.mode {
                 ui::InputMode::Search => {
                     match key.code {
@@ -87,9 +120,28 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                             return Ok(());
                         }
                     }
-                    KeyCode::Char('/') | KeyCode::Char('i') => {
+                    KeyCode::Char('/') => {
                         app.mode = ui::InputMode::Search;
                         app.search_query.clear();
+                    }
+                    KeyCode::Char('i') => {
+                        if let Some(pkg) = app.packages.get(app.selected) {
+                            if !pkg.installed {
+                                app.confirm_msg =
+                                    Some(ui::ConfirmAction::Install(pkg.name.clone()));
+                            } else {
+                                app.status_msg = Some(format!("{} is already installed", pkg.name));
+                            }
+                        }
+                    }
+                    KeyCode::Char('r') => {
+                        if let Some(pkg) = app.packages.get(app.selected) {
+                            if pkg.installed {
+                                app.confirm_msg = Some(ui::ConfirmAction::Remove(pkg.name.clone()));
+                            } else {
+                                app.status_msg = Some(format!("{} is not installed", pkg.name));
+                            }
+                        }
                     }
                     KeyCode::Char('h') | KeyCode::Char('?') => app.show_help = true,
                     KeyCode::Down | KeyCode::Char('j') => app.next(),

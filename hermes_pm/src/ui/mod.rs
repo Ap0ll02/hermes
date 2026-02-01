@@ -7,6 +7,13 @@ pub struct App {
     pub search_query: String,
     pub mode: InputMode,
     pub show_help: bool,
+    pub confirm_msg: Option<ConfirmAction>,
+    pub status_msg: Option<String>,
+}
+
+pub enum ConfirmAction {
+    Install(String),
+    Remove(String),
 }
 
 pub enum InputMode {
@@ -22,6 +29,8 @@ impl App {
             search_query: String::new(),
             mode: InputMode::Search,
             show_help: false,
+            confirm_msg: None,
+            status_msg: None,
         }
     }
 
@@ -49,6 +58,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
             Constraint::Length(3), // Search bar
             Constraint::Min(0),    // Package list
             Constraint::Length(7), // Details
+            Constraint::Length(3), // Status Bar
         ])
         .split(frame.area());
 
@@ -121,6 +131,23 @@ pub fn draw(frame: &mut Frame, app: &App) {
         );
         frame.render_widget(details, chunks[2]);
     }
+
+    // Status Bar
+    let status_text = app
+        .status_msg
+        .as_ref()
+        .map(|s| s.as_str())
+        .unwrap_or("Ready");
+
+    let status = Paragraph::new(status_text)
+        .style(Style::default().fg(Color::Green))
+        .block(Block::default().borders(Borders::ALL).title("Status"));
+    frame.render_widget(status, chunks[3]);
+
+    if let Some(ref action) = app.confirm_msg {
+        draw_confirm_overlay(frame, action);
+    }
+
     if app.show_help {
         draw_help_overlay(frame);
     }
@@ -184,4 +211,36 @@ fn centered_rect(
             Constraint::Percentage((100 - percent_y) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+pub fn draw_confirm_overlay(frame: &mut Frame, action: &ConfirmAction) {
+    let area = centered_rect(50, 20, frame.area());
+    let (title, message) = match action {
+        ConfirmAction::Install(pkg) => (
+            " Confirm Installation ",
+            format!(
+                "Install package '{}'?\n\nPress 'y' to confirm, 'n' to cancel",
+                pkg
+            ),
+        ),
+        ConfirmAction::Remove(pkg) => (
+            " Confirm Removal ",
+            format!(
+                "Remove package '{}'?\n\nPress 'y' to confirm, 'n' to cancel",
+                pkg
+            ),
+        ),
+    };
+
+    let confirm = Paragraph::new(message)
+        .style(Style::default().fg(Color::White))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::LightMagenta))
+                .title(title)
+                .style(Style::default().fg(Color::Blue)),
+        );
+    frame.render_widget(Clear, area);
+    frame.render_widget(confirm, area);
 }
