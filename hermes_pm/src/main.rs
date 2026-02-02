@@ -55,12 +55,39 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
             if let Some(ref action) = app.confirm_msg {
                 match key.code {
                     KeyCode::Char('y') | KeyCode::Char('Y') => {
+                        // Return to Alt Screen
+                        disable_raw_mode()?;
+                        {
+                            let mut out = io::stdout();
+                            execute!(out, LeaveAlternateScreen,)?;
+                        }
+                        match action {
+                            ui::ConfirmAction::Install(_) => {
+                                println!("\nInstalling: {}", app.packages[app.selected].name)
+                            }
+                            ui::ConfirmAction::Remove(_) => {
+                                println!("\nRemoving: {}", app.packages[app.selected].name)
+                            }
+                            ui::ConfirmAction::Update => {
+                                println!("\nUpdating Packages:")
+                            }
+                        }
                         // Execute the action
                         let result = match action {
                             ui::ConfirmAction::Install(pkg) => commands::install_package(pkg),
                             ui::ConfirmAction::Remove(pkg) => commands::remove_package(pkg),
                             ui::ConfirmAction::Update => commands::update_packages(),
                         };
+
+                        println!("\nPress Enter To Continue...");
+                        std::io::stdin().read_line(&mut String::new())?;
+
+                        enable_raw_mode()?;
+                        {
+                            let mut out = io::stdout();
+                            execute!(out, EnterAlternateScreen,)?;
+                        }
+                        terminal.clear();
 
                         app.status_msg = Some(match result {
                             Ok(msg) => msg,
@@ -90,9 +117,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         KeyCode::Char(c) => {
                             app.search_query.push(c);
                             // Search as you type
-                            if let Ok(results) = package::search_packages(&app.search_query) {
-                                app.packages = results;
-                                app.selected = 0;
+                            if app.search_query.len() > 2 {
+                                if let Ok(results) = package::search_packages(&app.search_query) {
+                                    app.packages = results;
+                                    app.selected = 0;
+                                }
                             }
                         }
                         KeyCode::Backspace => {
@@ -107,12 +136,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         }
                         KeyCode::Enter => {
                             app.mode = ui::InputMode::Normal;
+                            if app.search_query.len() < 3 {
+                                if let Ok(results) = package::search_packages(&app.search_query) {
+                                    app.packages = results;
+                                    app.selected = 0;
+                                }
+                            }
                         }
                         KeyCode::Down => app.next(),
                         KeyCode::Up => app.previous(),
                         _ => {}
                     }
                 }
+
                 ui::InputMode::Normal => match key.code {
                     KeyCode::Char('q') => {
                         if app.show_help {

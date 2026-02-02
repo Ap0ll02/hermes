@@ -1,16 +1,15 @@
 use std::process::Command;
 
 pub fn install_package(package_name: &str) -> Result<String, String> {
-    let output = Command::new("pacman")
-        .args(["-S", "--noconfirm", package_name])
-        .output()
+    let status = Command::new("pacman")
+        .args(["-S", package_name])
+        .status()
         .map_err(|e| format!("Error Installing: {e}"))?;
 
-    if output.status.success() {
+    if status.success() {
         Ok(format!("Successfully Installed {package_name}"))
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(format!("Failed to install {}: {}", package_name, stderr))
+        Err(format!("Failed to install {}", package_name))
     }
 }
 
