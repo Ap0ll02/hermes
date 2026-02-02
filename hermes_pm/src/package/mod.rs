@@ -44,13 +44,11 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
     if let Ok(entries) = fs::read_dir(sync_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if let Some(name) = path.file_name() {
-                if let Some(name_str) = name.to_str() {
-                    if let Some(repo) = repo_from_filename(name_str) {
+            if let Some(name) = path.file_name()
+                && let Some(name_str) = name.to_str()
+                    && let Some(repo) = repo_from_filename(name_str) {
                         repos.push(repo);
                     }
-                }
-            }
         }
     }
     // Fallback if no repos found

@@ -33,8 +33,8 @@ pub fn update_packages() -> Result<String, String> {
 
     status_to_message(
         status.success(),
-        format!("Successfully Updated Packages"),
-        format!("Failed to update packages"),
+        "Successfully Updated Packages".to_string(),
+        "Failed to update packages".to_string(),
     )
 }
 

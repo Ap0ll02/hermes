@@ -91,7 +91,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                             let mut out = io::stdout();
                             execute!(out, EnterAlternateScreen,)?;
                         }
-                        terminal.clear();
+                        let _ = terminal.clear();
 
                         app.status_msg = Some(match result {
                             Ok(msg) => msg,
@@ -101,11 +101,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         app.confirm_msg = None;
 
                         // Refresh search to update installed status
-                        if !app.search_query.is_empty() {
-                            if let Ok(results) = package::search_packages(&app.search_query) {
+                        if !app.search_query.is_empty()
+                            && let Ok(results) = package::search_packages(&app.search_query) {
                                 app.packages = results;
                             }
-                        }
                     }
                     KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
                         app.confirm_msg = None;
@@ -121,12 +120,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         KeyCode::Char(c) => {
                             app.search_query.push(c);
                             // Search as you type
-                            if app.search_query.len() > 2 {
-                                if let Ok(results) = package::search_packages(&app.search_query) {
+                            if app.search_query.len() > 2
+                                && let Ok(results) = package::search_packages(&app.search_query) {
                                     app.packages = results;
                                     app.selected = 0;
                                 }
-                            }
                         }
                         KeyCode::Backspace => {
                             app.search_query.pop();
@@ -140,12 +138,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         }
                         KeyCode::Enter => {
                             app.mode = ui::InputMode::Normal;
-                            if app.search_query.len() < 3 {
-                                if let Ok(results) = package::search_packages(&app.search_query) {
+                            if app.search_query.len() < 3
+                                && let Ok(results) = package::search_packages(&app.search_query) {
                                     app.packages = results;
                                     app.selected = 0;
                                 }
-                            }
                         }
                         KeyCode::Down => app.next(),
                         KeyCode::Up => app.previous(),

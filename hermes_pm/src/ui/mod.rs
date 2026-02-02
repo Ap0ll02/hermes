@@ -23,6 +23,12 @@ pub enum InputMode {
     Search,
 }
 
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl App {
     pub fn new() -> Self {
         Self {
@@ -136,9 +142,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
 
     // Status Bar
     let status_text = app
-        .status_msg
-        .as_ref()
-        .map(|s| s.as_str())
+        .status_msg.as_deref()
         .unwrap_or("Ready");
 
     let status = Paragraph::new(status_text)
@@ -236,7 +240,7 @@ pub fn draw_confirm_overlay(frame: &mut Frame, action: &ConfirmAction) {
         ),
         ConfirmAction::Update => (
             " Confirm Update ",
-            format!("Update and Upgrade packages?\n\nPress 'y' to confirm, 'n' to cancel"),
+            "Update and Upgrade packages?\n\nPress 'y' to confirm, 'n' to cancel".to_string(),
         ),
         ConfirmAction::Downgrade(pkg) => (
             " Confirm Downgrade Selection ",
