@@ -15,6 +15,7 @@ pub enum ConfirmAction {
     Install(String),
     Remove(String),
     Update,
+    Downgrade(String),
 }
 
 pub enum InputMode {
@@ -169,6 +170,8 @@ pub fn draw_help_overlay(frame: &mut Frame) {
         "  i           Install selected package",
         "  r           Remove selected package",
         "  Enter       View package details",
+        "  d           Downgrade selected package",
+        "  u           Update packages (pacman -Syu)",
         "",
         "Other:",
         "  ?           Toggle this help",
@@ -233,10 +236,15 @@ pub fn draw_confirm_overlay(frame: &mut Frame, action: &ConfirmAction) {
         ),
         ConfirmAction::Update => (
             " Confirm Update ",
+            format!("Update and Upgrade packages?\n\nPress 'y' to confirm, 'n' to cancel"),
+        ),
+        ConfirmAction::Downgrade(pkg) => (
+            " Confirm Downgrade Selection ",
             format!(
-                "Update and Upgrade packages?\n\nPress 'y' to confirm, 'n' to cancel"
-            )),
-
+                "Downgrade package: {}\n\nPress 'y' to confirm, 'n' to cancel",
+                pkg
+            ),
+        ),
     };
 
     let confirm = Paragraph::new(message)

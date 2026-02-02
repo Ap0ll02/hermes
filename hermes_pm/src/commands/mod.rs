@@ -16,14 +16,13 @@ pub fn install_package(package_name: &str) -> Result<String, String> {
 pub fn remove_package(package_name: &str) -> Result<String, String> {
     let output = Command::new("pacman")
         .args(["-R", package_name])
-        .output()
+        .status()
         .map_err(|e| format!("Error removing: {e}"))?;
 
-    if output.status.success() {
+    if output.success() {
         Ok(format!("Successfully Removed {package_name}"))
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(format!("Failed to remove {}: {}", package_name, stderr))
+        Err(format!("Failed to remove {}", package_name))
     }
 }
 
@@ -38,5 +37,18 @@ pub fn update_packages() -> Result<String, String> {
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         Err(format!("Failed to update packages: {}", stderr))
+    }
+}
+
+pub fn downgrade_package(package_name: &str) -> Result<String, String> {
+    let output = Command::new("downgrade")
+        .args([package_name])
+        .status()
+        .map_err(|e| format!("Error removing: {e}"))?;
+
+    if output.success() {
+        Ok(format!("Successfully Downgraded {package_name}"))
+    } else {
+        Err(format!("Failed to downgrade {}", package_name))
     }
 }

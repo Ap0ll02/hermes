@@ -98,3 +98,37 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
     // eprintln!("=== Total results: {} ===\n", results.len());
     Ok(results)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_package_creation() {
+        let pkg = Package {
+            name: "test".to_string(),
+            repo: "core".to_string(),
+            version: "1.0.0".to_string(),
+            description: "Test package".to_string(),
+            installed: false,
+        };
+
+        assert_eq!(pkg.name, "test");
+        assert!(!pkg.installed);
+    }
+
+    #[test]
+    fn test_display_line_format() {
+        let pkg = Package {
+            name: "vim".to_string(),
+            repo: "extra".to_string(),
+            version: "9.0".to_string(),
+            description: "Text editor".to_string(),
+            installed: false,
+        };
+
+        let line = pkg.display_line();
+        assert!(line.contains("vim"));
+        assert!(line.contains("extra"));
+    }
+}

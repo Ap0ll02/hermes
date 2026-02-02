@@ -71,12 +71,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                             ui::ConfirmAction::Update => {
                                 println!("\nUpdating Packages:")
                             }
+                            ui::ConfirmAction::Downgrade(_) => {
+                                println!("\nDowngrading: {}", app.packages[app.selected].name)
+                            }
                         }
                         // Execute the action
                         let result = match action {
                             ui::ConfirmAction::Install(pkg) => commands::install_package(pkg),
                             ui::ConfirmAction::Remove(pkg) => commands::remove_package(pkg),
                             ui::ConfirmAction::Update => commands::update_packages(),
+                            ui::ConfirmAction::Downgrade(pkg) => commands::downgrade_package(pkg),
                         };
 
                         println!("\nPress Enter To Continue...");
@@ -182,6 +186,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                     }
                     KeyCode::Char('u') => {
                         app.confirm_msg = Some(ui::ConfirmAction::Update);
+                    }
+                    KeyCode::Char('d') => {
+                        if let Some(pkg) = app.packages.get(app.selected) {
+                            if pkg.installed {
+                                app.confirm_msg =
+                                    Some(ui::ConfirmAction::Downgrade(pkg.name.clone()));
+                            } else {
+                                app.status_msg = Some(format!("{} is not installed", pkg.name));
+                            }
+                        }
                     }
                     KeyCode::Char('h') | KeyCode::Char('?') => app.show_help = true,
                     KeyCode::Down | KeyCode::Char('j') => app.next(),

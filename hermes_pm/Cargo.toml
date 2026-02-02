@@ -3,6 +3,14 @@ name = "hermes_pm"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "hermes"
+path = "src/lib.rs"
+
+[[bin]]
+name = "hermes"
+path = "src/main.rs"
+
 [dependencies]
 alpm = "5.0.2"
 crossterm = "0.29.0"
