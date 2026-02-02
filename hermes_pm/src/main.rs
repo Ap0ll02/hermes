@@ -59,6 +59,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                         let result = match action {
                             ui::ConfirmAction::Install(pkg) => commands::install_package(pkg),
                             ui::ConfirmAction::Remove(pkg) => commands::remove_package(pkg),
+                            ui::ConfirmAction::Update => commands::update_packages(),
                         };
 
                         app.status_msg = Some(match result {
@@ -142,6 +143,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut ui::App) -> io::Res
                                 app.status_msg = Some(format!("{} is not installed", pkg.name));
                             }
                         }
+                    }
+                    KeyCode::Char('u') => {
+                        app.confirm_msg = Some(ui::ConfirmAction::Update);
                     }
                     KeyCode::Char('h') | KeyCode::Char('?') => app.show_help = true,
                     KeyCode::Down | KeyCode::Char('j') => app.next(),

@@ -14,6 +14,7 @@ pub struct App {
 pub enum ConfirmAction {
     Install(String),
     Remove(String),
+    Update,
 }
 
 pub enum InputMode {
@@ -214,7 +215,7 @@ fn centered_rect(
 }
 
 pub fn draw_confirm_overlay(frame: &mut Frame, action: &ConfirmAction) {
-    let area = centered_rect(50, 20, frame.area());
+    let area = centered_rect(30, 42, frame.area());
     let (title, message) = match action {
         ConfirmAction::Install(pkg) => (
             " Confirm Installation ",
@@ -230,6 +231,12 @@ pub fn draw_confirm_overlay(frame: &mut Frame, action: &ConfirmAction) {
                 pkg
             ),
         ),
+        ConfirmAction::Update => (
+            " Confirm Update ",
+            format!(
+                "Update and Upgrade packages?\n\nPress 'y' to confirm, 'n' to cancel"
+            )),
+
     };
 
     let confirm = Paragraph::new(message)

@@ -27,3 +27,17 @@ pub fn remove_package(package_name: &str) -> Result<String, String> {
         Err(format!("Failed to remove {}: {}", package_name, stderr))
     }
 }
+
+pub fn update_packages() -> Result<String, String> {
+    let output = Command::new("pacman")
+        .args(["-Syu", "--noconfirm"])
+        .output()
+        .map_err(|e| format!("Error Updating: {e}"))?;
+
+    if output.status.success() {
+        Ok(format!("Successfully Updated"))
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Failed to update packages: {}", stderr))
+    }
+}
