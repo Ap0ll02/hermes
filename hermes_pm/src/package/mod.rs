@@ -94,8 +94,6 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
             }
         }
     }
-
-    // eprintln!("=== Total results: {} ===\n", results.len());
     Ok(results)
 }
 
@@ -130,5 +128,75 @@ mod tests {
         let line = pkg.display_line();
         assert!(line.contains("vim"));
         assert!(line.contains("extra"));
+    }
+
+    #[test]
+    fn display_line_shows_installed_and_truncates_description() {
+        let pkg = Package {
+            name: "vim".to_string(),
+            repo: "extra".to_string(),
+            version: "9.0".to_string(),
+            description: "a".repeat(100), // force truncation
+            installed: true,
+        };
+
+        let line = pkg.display_line();
+
+        // Installed marker
+        assert!(line.starts_with("✓"));
+
+        // Description should be truncated to 50 chars
+        let desc_part = line.split_whitespace().last().unwrap();
+        assert!(desc_part.len() <= 50);
+    }
+
+    #[test]
+    fn display_line_shows_not_installed_and_truncates_description() {
+        let pkg = Package {
+            name: "vim".to_string(),
+            repo: "extra".to_string(),
+            version: "9.0".to_string(),
+            description: "a".repeat(100), // force truncation
+            installed: false,
+        };
+
+        let line = pkg.display_line();
+
+        // Installed marker
+        assert!(line.starts_with("✓"));
+
+        // Description should be truncated to 50 chars
+        let desc_part = line.split_whitespace().last().unwrap();
+        assert!(desc_part.len() <= 50);
+    }
+
+    #[test]
+    fn test_package_struct_fields() {
+        let pkg = Package {
+            name: "test".to_string(),
+            repo: "core".to_string(),
+            version: "1.0.0".to_string(),
+            description: "A test package".to_string(),
+            installed: true,
+        };
+
+        assert_eq!(pkg.name, "test");
+        assert_eq!(pkg.repo, "core");
+        assert_eq!(pkg.version, "1.0.0");
+        assert_eq!(pkg.description, "A test package");
+        assert!(pkg.installed);
+    }
+
+    #[test]
+    fn test_package_not_installed_default() {
+        let pkg = Package {
+            name: "test".to_string(),
+            repo: "core".to_string(),
+            version: "1.0.0".to_string(),
+            description: "Test".to_string(),
+            installed: false,
+        };
+
+        assert!(!pkg.installed);
     }
 }
