@@ -15,7 +15,7 @@ pub fn install_package(package_name: &str) -> Result<String, String> {
 
 pub fn remove_package(package_name: &str) -> Result<String, String> {
     let output = Command::new("pacman")
-        .args(["-R", "--noconfirm", package_name])
+        .args(["-R", package_name])
         .output()
         .map_err(|e| format!("Error removing: {e}"))?;
 
@@ -29,7 +29,7 @@ pub fn remove_package(package_name: &str) -> Result<String, String> {
 
 pub fn update_packages() -> Result<String, String> {
     let output = Command::new("pacman")
-        .args(["-Syu", "--noconfirm"])
+        .args(["-Syu"])
         .output()
         .map_err(|e| format!("Error Updating: {e}"))?;
 
