@@ -21,14 +21,17 @@ jobs:
       
       - name: Build release
         run: cargo build --release --verbose
+        working-directory: hermes_pm
       
       - name: Strip binary
         run: strip target/release/hermes
+        working-directory: hermes_pm
       
       - name: Create tarball
         run: |
           tar -czf hermes-${{ steps.get_version.outputs.VERSION }}-x86_64-linux.tar.gz \
             -C target/release hermes
+        working-directory: hermes_pm
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -48,3 +51,4 @@ jobs:
             See commits for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: hermes_pm

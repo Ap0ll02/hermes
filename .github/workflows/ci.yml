@@ -24,21 +24,25 @@ jobs:
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        working-directory: hermes_pm
       
       - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+        working-directory: hermes_pm
       
       - name: Cache target directory
         uses: actions/cache@v4
         with:
           path: target
           key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+        working-directory: hermes_pm
       
       - name: Run tests
         run: cargo test --verbose
+        working-directory: hermes_pm
   
   clippy:
     name: Clippy (Linting)
@@ -50,9 +54,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+        working-directory: hermes_pm
       
       - name: Run Clippy
         run: cargo clippy -- -D warnings
+        working-directory: hermes_pm
   
   fmt:
     name: Rustfmt (Code Formatting)
@@ -64,9 +70,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+        working-directory: hermes_pm
       
       - name: Check formatting
         run: cargo fmt -- --check
+        working-directory: hermes_pm
   
   build:
     name: Build Release Binary
@@ -79,9 +87,11 @@ jobs:
       
       - name: Build release
         run: cargo build --release --verbose
+        working-directory: hermes_pm
       
       - name: Upload binary as artifact
         uses: actions/upload-artifact@v4
         with:
           name: hermes-x86_64-linux
           path: target/release/hermes
+        working-directory: hermes_pm

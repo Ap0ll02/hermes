@@ -18,8 +18,10 @@ jobs:
       
       - name: Generate coverage
         run: cargo tarpaulin --out Xml
+        working-directory: hermes_pm
       
       - name: Upload to codecov
         uses: codecov/codecov-action@v3
         with:
           files: ./cobertura.xml
+        working-directory: hermes_pm
