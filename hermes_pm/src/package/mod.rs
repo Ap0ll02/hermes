@@ -45,11 +45,10 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
         for entry in entries.flatten() {
             let path = entry.path();
             if let Some(name) = path.file_name() {
-                // eprintln!("Found DB: {}", name.to_str().unwrap());
-                let name_str = name.to_str();
-                if name_str.unwrap().ends_with(".db") && !name_str.unwrap().ends_with(".db.sig") {
-                    let repo_entry = name_str.unwrap().trim_end_matches(".db").to_string();
-                    repos.push(repo_entry);
+                if let Some(name_str) = name.to_str() {
+                    if let Some(repo) = repo_from_filename(name_str) {
+                        repos.push(repo);
+                    }
                 }
             }
         }
@@ -79,9 +78,7 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
             let name = pkg.name();
             let desc = pkg.desc().unwrap_or("");
 
-            if name.to_lowercase().contains(&query.to_lowercase())
-                || desc.to_lowercase().contains(&query.to_lowercase())
-            {
+            if match_query(name, desc, query) {
                 let installed = local_db.pkg(name).is_ok();
 
                 results.push(Package {
@@ -97,9 +94,69 @@ pub fn search_packages(query: &str) -> Result<Vec<Package>, String> {
     Ok(results)
 }
 
+fn match_query(name: &str, desc: &str, query: &str) -> bool {
+    if query.is_empty() {
+        return false;
+    }
+
+    let q = query.to_lowercase();
+    name.to_lowercase().contains(&q) || desc.to_lowercase().contains(&q)
+}
+
+fn repo_from_filename(filename: &str) -> Option<String> {
+    if filename.ends_with(".db") && !filename.ends_with(".db.sig") {
+        Some(filename.trim_end_matches(".db").to_string())
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_repo_from_filename_db() {
+        let repo = repo_from_filename("extra.db");
+        assert_eq!(repo, Some("extra".to_string()));
+    }
+
+    #[test]
+    fn test_repo_from_filename_db_sig() {
+        let repo = repo_from_filename("extra.db.sig");
+        assert_eq!(repo, None);
+    }
+
+    #[test]
+    fn test_repo_from_filename_non_db() {
+        let repo = repo_from_filename("extra.txt");
+        assert_eq!(repo, None);
+    }
+
+    #[test]
+    fn matches_query_matches_name() {
+        assert!(match_query("vim", "text editor", "vi"));
+    }
+
+    #[test]
+    fn matches_query_matches_desc() {
+        assert!(match_query("helix", "rust text editor", "editor"));
+    }
+
+    #[test]
+    fn matches_name_caps_sens() {
+        assert!(match_query("NANO", "small editor", "nan"));
+    }
+
+    #[test]
+    fn match_false_query_doesnt_match() {
+        assert!(!match_query("helix", "rust text editor", "vim"));
+    }
+
+    #[test]
+    fn match_empty_query_doesnt_match() {
+        assert!(!match_query("helix", "rust text editor", ""));
+    }
 
     #[test]
     fn test_package_creation() {
@@ -131,6 +188,39 @@ mod tests {
     }
 
     #[test]
+    fn test_truncate_display_line() {
+        let pkg = Package {
+            name: "Helix".to_string(),
+            repo: "extra".to_string(),
+            version: "95.9".to_string(),
+            description: "Mushroom editor".to_string(),
+            installed: false,
+        };
+
+        let line = pkg.display_line();
+        let after_status = &line[2..];
+        let repo_col = &after_status[..8];
+        assert_eq!(repo_col, "extra   ")
+    }
+
+    #[test]
+    fn test_desc_truncate() {
+        let pkg = Package {
+            name: "Helix".to_string(),
+            repo: "extra".to_string(),
+            version: "95.9".to_string(),
+            description: "This is a really long description in rust and I need to ensure only the first 50 characters are taken this is so great haha".to_string(),
+            installed: false,
+        };
+
+        let longest_desc = "This is a really long description in rust and I need to ensure only the first 50 characters are taken this is so great haha";
+        let long_desc = longest_desc.chars().take(50).collect::<String>();
+        let line = pkg.display_line();
+        assert!(line.contains(&long_desc));
+        assert!(!line.contains(longest_desc));
+    }
+
+    #[test]
     fn display_line_shows_installed_and_truncates_description() {
         let pkg = Package {
             name: "vim".to_string(),
@@ -151,23 +241,19 @@ mod tests {
     }
 
     #[test]
-    fn display_line_shows_not_installed_and_truncates_description() {
+    fn display_line_not_installed_has_blank_marker() {
         let pkg = Package {
-            name: "vim".to_string(),
-            repo: "extra".to_string(),
-            version: "9.0".to_string(),
-            description: "a".repeat(100), // force truncation
+            name: "nano".to_string(),
+            repo: "core".to_string(),
+            version: "7.0".to_string(),
+            description: "Editor".to_string(),
             installed: false,
         };
 
         let line = pkg.display_line();
 
-        // Installed marker
-        assert!(line.starts_with("✓"));
-
-        // Description should be truncated to 50 chars
-        let desc_part = line.split_whitespace().last().unwrap();
-        assert!(desc_part.len() <= 50);
+        assert!(line.starts_with(" "));
+        assert!(!line.starts_with("✓"));
     }
 
     #[test]

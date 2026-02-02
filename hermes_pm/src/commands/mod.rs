@@ -5,50 +5,70 @@ pub fn install_package(package_name: &str) -> Result<String, String> {
         .args(["-S", package_name])
         .status()
         .map_err(|e| format!("Error Installing: {e}"))?;
-
-    if status.success() {
-        Ok(format!("Successfully Installed {package_name}"))
-    } else {
-        Err(format!("Failed to install {}", package_name))
-    }
+    status_to_message(
+        status.success(),
+        format!("Successfully installed {package_name}"),
+        format!("Failed to install {package_name}"),
+    )
 }
 
 pub fn remove_package(package_name: &str) -> Result<String, String> {
-    let output = Command::new("pacman")
+    let status = Command::new("pacman")
         .args(["-R", package_name])
         .status()
         .map_err(|e| format!("Error removing: {e}"))?;
 
-    if output.success() {
-        Ok(format!("Successfully Removed {package_name}"))
-    } else {
-        Err(format!("Failed to remove {}", package_name))
-    }
+    status_to_message(
+        status.success(),
+        format!("Successfully removed {package_name}"),
+        format!("Failed to remove {package_name}"),
+    )
 }
 
 pub fn update_packages() -> Result<String, String> {
-    let output = Command::new("pacman")
+    let status = Command::new("pacman")
         .args(["-Syu"])
-        .output()
+        .status()
         .map_err(|e| format!("Error Updating: {e}"))?;
 
-    if output.status.success() {
-        Ok(format!("Successfully Updated"))
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(format!("Failed to update packages: {}", stderr))
-    }
+    status_to_message(
+        status.success(),
+        format!("Successfully Updated Packages"),
+        format!("Failed to update packages"),
+    )
 }
 
 pub fn downgrade_package(package_name: &str) -> Result<String, String> {
-    let output = Command::new("downgrade")
+    let status = Command::new("downgrade")
         .args([package_name])
         .status()
         .map_err(|e| format!("Error removing: {e}"))?;
 
-    if output.success() {
-        Ok(format!("Successfully Downgraded {package_name}"))
-    } else {
-        Err(format!("Failed to downgrade {}", package_name))
+    status_to_message(
+        status.success(),
+        format!("Successfully Downgraded {package_name}"),
+        format!("Failed to downgrade {package_name}"),
+    )
+}
+
+fn status_to_message(success: bool, suc_msg: String, fail_msg: String) -> Result<String, String> {
+    if success { Ok(suc_msg) } else { Err(fail_msg) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn status_msg_returns_ok() {
+        let result = status_to_message(true, "Success".to_string(), "Failure".to_string());
+
+        assert_eq!(result, Ok("Success".to_string()));
+    }
+    #[test]
+    fn status_msg_returns_err() {
+        let result = status_to_message(false, "Success".to_string(), "Failure".to_string());
+
+        assert_eq!(result, Err("Failure".to_string()));
     }
 }
