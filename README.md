@@ -14,6 +14,9 @@ A beautiful TUI package manager for Arch Linux, written in Rust.
 - ⚡ Fast and efficient using libalpm
 - 🎯 Vim-style keybindings
 
+!["Main Screen of the TUI"](./screenshots/main_screen.png) 
+!["Help PopUp"](./screenshots/help.png) 
+
 ## Installation
 ```bash
 # Download latest release
