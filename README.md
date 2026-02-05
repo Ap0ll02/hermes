@@ -8,14 +8,23 @@ A beautiful TUI package manager for Arch Linux, written in Rust.
 
 ## Features
 
-- 🔍 Real-time package search
+- 🔍 Real-time package search (currently requiring 2 characters typed first)
 - 📦 Install/remove packages with confirmation
-- ✨ Beautiful terminal UI with Catppuccin theme
+- ✨ Beautiful terminal UI (or soon to be)
 - ⚡ Fast and efficient using libalpm
 - 🎯 Vim-style keybindings
+- Built in Rust
 
 !["Main Screen of the TUI"](./screenshots/main_screen.png) 
+
+Get keybind help using `?` in Normal Mode in the program.
+
 !["Help PopUp"](./screenshots/help.png) 
+
+Downgrade packages with the downgrade package.
+
+!["Downgrade screen"](./screenshots/downgrade.png)
+
 
 ## Installation
 ```bash
@@ -58,4 +67,4 @@ sudo ./target/release/hermes
 
 ## License
 
-TBD
+MIT
