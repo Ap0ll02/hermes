@@ -8,7 +8,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, prelude::*};
-use std::{alloc::System, env::args, io};
+use std::io;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     for arg in env::args() {
