@@ -27,6 +27,15 @@ Downgrade packages with the downgrade package.
 
 
 ## Installation
+
+### AUR
+Use your favorite AUR helper to install!
+```
+paru hermes-pm
+yay hermes-pm
+```
+
+### From Source
 ```bash
 # Download latest release
 wget https://github.com/yourusername/hermes/releases/latest/download/hermes-x86_64-linux.tar.gz
