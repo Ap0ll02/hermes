@@ -8,9 +8,18 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, prelude::*};
-use std::io;
+use std::{alloc::System, env::args, io};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    for arg in env::args() {
+        match arg.as_str() {
+            "-u" => {
+                let _ = commands::update_packages();
+                return Ok(());
+            },
+            _ => {},
+        }
+    }
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
